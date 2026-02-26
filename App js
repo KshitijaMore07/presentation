@@ -1,0 +1,47 @@
+// 1. MODEL
+const Model = {
+    tasks: [],
+
+    addTask(text) {
+        this.tasks.push({ id: Date.now(), text: text });
+    },
+
+    deleteTask(id) {
+        this.tasks = this.tasks.filter(t => t.id !== id);
+    }
+};
+
+// 2. VIEW
+const View = {
+    render(tasks) {
+        const list = document.getElementById('taskList');
+        list.innerHTML = tasks.map(t => `
+            <li>
+                ${t.text}
+                <button onclick="Controller.handleDelete(${t.id})">❌</button>
+            </li>
+        `).join('');
+    }
+};
+
+// 3. CONTROLLER
+const Controller = {
+    init() {
+        document.getElementById('addBtn').addEventListener('click', () => {
+            const input = document.getElementById('taskInput');
+
+            if (input.value) {
+                Model.addTask(input.value);
+                input.value = '';
+                View.render(Model.tasks);
+            }
+        });
+    },
+
+    handleDelete(id) {
+        Model.deleteTask(id);
+        View.render(Model.tasks);
+    }
+};
+
+Controller.init();
