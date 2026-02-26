@@ -1,40 +1,100 @@
-// 1. MODEL
+// ================= MODEL =================
 const Model = {
-    tasks: [],
+    tasks: JSON.parse(localStorage.getItem("tasks")) || [],
+
+    saveToStorage() {
+        localStorage.setItem("tasks", JSON.stringify(this.tasks));
+    },
 
     addTask(text) {
-        this.tasks.push({ id: Date.now(), text: text });
+        this.tasks.push({
+            id: Date.now(),
+            text: text,
+            completed: false
+        });
+        this.saveToStorage();
     },
 
     deleteTask(id) {
         this.tasks = this.tasks.filter(t => t.id !== id);
+        this.saveToStorage();
+    },
+
+    toggleTask(id) {
+        this.tasks = this.tasks.map(t =>
+            t.id === id ? { ...t, completed: !t.completed } : t
+        );
+        this.saveToStorage();
+    },
+
+    editTask(id, newText) {
+        this.tasks = this.tasks.map(t =>
+            t.id === id ? { ...t, text: newText } : t
+        );
+        this.saveToStorage();
     }
 };
 
-// 2. VIEW
+// ================= VIEW =================
 const View = {
     render(tasks) {
-        const list = document.getElementById('taskList');
+        const list = document.getElementById("taskList");
+        const counter = document.getElementById("taskCounter");
+
+        counter.textContent = `Total Tasks: ${tasks.length}`;
+
         list.innerHTML = tasks.map(t => `
-            <li>
-                ${t.text}
-                <button onclick="Controller.handleDelete(${t.id})">❌</button>
+            <li class="${t.completed ? "completed" : ""}">
+                <span onclick="Controller.handleToggle(${t.id})">
+                    ${t.text}
+                </span>
+                <div class="task-buttons">
+                    <button onclick="Controller.handleEdit(${t.id})">Edit</button>
+                    <button class="delete" onclick="Controller.handleDelete(${t.id})">Delete</button>
+                </div>
             </li>
-        `).join('');
+        `).join("");
     }
 };
 
-// 3. CONTROLLER
+// ================= CONTROLLER =================
 const Controller = {
     init() {
-        document.getElementById('addBtn').addEventListener('click', () => {
-            const input = document.getElementById('taskInput');
+        document.getElementById("addBtn").addEventListener("click", () => {
+            const input = document.getElementById("taskInput");
 
-            if (input.value) {
-                Model.addTask(input.value);
-                input.value = '';
+            if (input.value.trim() !== "") {
+                Model.addTask(input.value.trim());
+                input.value = "";
                 View.render(Model.tasks);
             }
+        });
+
+        // Render stored tasks on load
+        View.render(Model.tasks);
+    },
+
+    handleDelete(id) {
+        Model.deleteTask(id);
+        View.render(Model.tasks);
+    },
+
+    handleToggle(id) {
+        Model.toggleTask(id);
+        View.render(Model.tasks);
+    },
+
+    handleEdit(id) {
+        const newText = prompt("Edit your task:");
+        if (newText && newText.trim() !== "") {
+            Model.editTask(id, newText.trim());
+            View.render(Model.tasks);
+        }
+    }
+};
+
+// Initialize App
+Controller.init();            }
         });
     },
 
